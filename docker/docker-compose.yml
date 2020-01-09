@@ -1,0 +1,64 @@
+version: '3.5'
+
+
+services:
+
+  nginx:
+    image: nginx
+    container_name: srip-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/nginx/conf:/etc/nginx/conf.d
+      - ./data/nginx/data:/usr/share/nginx/html
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - srip-network
+
+  node-api:
+    container_name: srip-node-api
+    restart: always
+    image: node-api
+    build:
+      context: ./data/node
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/node:/usr/src/app
+      - /usr/src/app/node_modules
+    command: "npm start"
+    networks:
+      - srip-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: srip-certbot
+    restart: always
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - srip-network
+
+  wso2-am:
+    image: wso2/wso2am:2.6.0
+    container_name: srip-wso2-am
+    restart: always
+    volumes:
+      - ./data/wso2/repository/deployment/server/jaggeryapps/store/site/conf/site.json:/home/wso2carbon/wso2am-2.6.0/repository/deployment/server/jaggeryapps/store/site/conf/site.json
+      - ./data/wso2/repository/deployment/server/jaggeryapps/publisher/site/conf/site.json:/home/wso2carbon/wso2am-2.6.0/repository/deployment/server/jaggeryapps/publisher/site/conf/site.json
+      - ./data/wso2/repository/deployment/server/jaggeryapps/admin/site/conf/site.json:/home/wso2carbon/wso2am-2.6.0/repository/deployment/server/jaggeryapps/admin/site/conf/site.json
+      - ./data/wso2/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.6.0/repository/conf/api-manager.xml
+    networks:
+      - srip-network
+
+
+networks:
+
+  srip-network:
+    name: srip
+    driver: bridge

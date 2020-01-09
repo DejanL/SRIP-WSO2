@@ -1,0 +1,17 @@
+{
+  "name": "docker_web_app",
+  "version": "1.0.0",
+  "description": "Node.js on Docker",
+  "author": "Dejan Lavbič <dejan@lavbic.net>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "express-jwt": "latest",
+    "jsonwebtoken": "latest",
+    "swagger-jsdoc": "latest",
+    "swagger-ui-express": "latest"
+  }
+}
